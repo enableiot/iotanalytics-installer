@@ -77,7 +77,7 @@ do
   fi
   
   write_section "Common config"
-  setup_field "GITHUB_SPACE" "git@github.com:enableiot" "Git repository to download packages"
+  setup_field "GITHUB_SPACE" "https://github.com/enableiot" "Git repository to download packages"
   setup_field "CF_SPACE_NAME" "installer" "Cloud Foudry Space Name"
   setup_field "FORCE" 0 "remove and create from scratch" 
   setup_field "DEPLOY_APPS" 1 "set only variables (0), install apps (1)" 
