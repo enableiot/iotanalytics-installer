@@ -1,7 +1,7 @@
 # iotanalytics-installer
 Installation wizard
 
-Here is an installation wizzard for IoT Analytics on Cloud Foundry.
+Here is an installation wizzard for IoT Analytics on Trusted Analytics Platform.
 
 Please run ./configure.sh to start a wizzard.
 
