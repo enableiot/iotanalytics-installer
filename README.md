@@ -27,3 +27,5 @@ cf login
 1. Cloud Foundry CLI and Trusted Analytics Platform account (https://github.com/trustedanalytics)
 1. zip packaging utility
 1. GNU Make >= 3.8
+1. npm >= 1.3.10
+
