@@ -34,34 +34,41 @@ cf login
 Ubuntu and Debian-based OSes:
 
 1. Java:
-```
-sudo add-apt-repository ppa:webupd8team/java
-sudo apt-get install oracle-java8-installer
-```
-Remember to export JAVA_HOME:
-```
-export JAVA_HOME=/usr/lib/jvm/java-8-oracle
-echo "JAVA_HOME=/usr/lib/jvm/java-8-oracle" >> ~/.profile
-```
 
-1. Gradle:
-```
-sudo add-apt-repository -y ppa:cwchien/gradle
-sudo apt-get install gradle
-```
+  ```
+    sudo add-apt-repository ppa:webupd8team/java
+    sudo apt-get install oracle-java8-installer
+  ```
+        
+  Remember to export JAVA_HOME:
+        
+  ```
+    export JAVA_HOME=/usr/lib/jvm/java-8-oracle
+    echo "JAVA_HOME=/usr/lib/jvm/java-8-oracle" >> ~/.profile
+   ```
 
-1. Other dependencies:
-```
-sudo apt-get install nodejs-legacy maven npm git zip
-```
+2. Gradle:
+        
+  ```
+    sudo add-apt-repository -y ppa:cwchien/gradle
+    sudo apt-get install gradle
+  ```
 
-1. grunt-cli:
-```
-sudo npm -g install grunt-cli 
-```
+3. Other dependencies:
+        
+  ```
+    sudo apt-get install nodejs-legacy maven npm git zip
+  ```
 
-1. Download Cloud Foundry CLI deb package and install it using:
-```
-sudo dpkg -i <path to deb>
-``` 
+4. grunt-cli:
+        
+  ```
+    sudo npm -g install grunt-cli 
+  ```
+
+5. Download Cloud Foundry CLI deb package and install it using:
+        
+  ```
+    sudo dpkg -i <path to deb>
+  ``` 
 
