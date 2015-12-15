@@ -298,7 +298,6 @@ function deploy_services {
   install_service postgres &&
   install_service cdh &&
   install_service zookeeper-wssb &&
-  install_service logstash &&
   install_service redis &&
   install_service hdfs &&     
   provide_backend_endpoint ${1} &&  
