@@ -94,7 +94,7 @@ do
 	  read -p "Otherwise configuration wizzard will generate a new Dashboard's keys. >" -r
   fi
 	
-  if [[ $REPLY =~ ^[Yy] ]]
+  if [[ $REPLY == [Yy] ]]
   then
     write_section "SECURITY KEYS"
     setup_field "PUBLIC_PEM_PATH" "${PWD}/${KEYS_DIR}/public.pem"
@@ -163,7 +163,7 @@ do
       REPLIED=1
     fi
   done
-  if [[ $REPLY =~ ^[Yy] ]]
+  if [[ $REPLY == [Yy] ]]
   then
     break
   fi
@@ -174,7 +174,7 @@ then
 	read -p "Do you want to start deployment? >" -r
 fi
 
-if [[ $REPLY =~ ^[Yy] || $FORCE_DEFAULT ]]
+if [[ $REPLY == [Yy] || $FORCE_DEFAULT ]]
 then
   ./installer.sh ${CONFIGURATION_FILE}
 fi
