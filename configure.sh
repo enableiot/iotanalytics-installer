@@ -44,9 +44,15 @@ function setup_field {
   FIELD=${1}
   DEFAULT=${2}
   COMMENT=${3}
+  
+  if [ $FORCE_DEFAULT ]
+  then
+	echo "${FIELD}=${DEFAULT}" | tee -a ${CONFIGURATION_FILE}
+	return
+  fi
+  
   echo ""
   echo "Please provide ${FIELD} ${COMMENT} [default: ${DEFAULT}]>"
-
   read  -r
   if [ "x$REPLY" = "x" ]
   then
@@ -56,6 +62,23 @@ function setup_field {
   fi
 }
 
+while [[ $# > 0 ]]
+do
+	key="$1"
+
+	case $key in
+		-d|--default)
+		FORCE_DEFAULT=1
+		shift
+		;;
+		*)
+		echo "Run script with -d or --default option to run non-interactively and set all to defaults"
+		exit 0
+		;;
+	esac
+	shift
+done
+
 while true
 do
   mkdir -p ${CONFIGURATION_DIR}
@@ -64,9 +87,13 @@ do
   echo "#!/bin/bash" > ${CONFIGURATION_FILE}
   echo "" >> ${CONFIGURATION_FILE}
 
-  echo "Dashboard application is using RSA keys for security reason."
-  echo "Would you like to provide paths to existing files with public and private keys in PEM format?"
-  read -p "Otherwise configuration wizzard will generate a new Dashboard's keys. >" -r
+  if [ ! $FORCE_DEFAULT ]
+  then 
+	  echo "Dashboard application is using RSA keys for security reason."
+	  echo "Would you like to provide paths to existing files with public and private keys in PEM format?"
+	  read -p "Otherwise configuration wizzard will generate a new Dashboard's keys. >" -r
+  fi
+	
   if [[ $REPLY =~ ^[Yy] ]]
   then
     write_section "SECURITY KEYS"
@@ -120,6 +147,13 @@ do
  
   
   cat ${CONFIGURATION_FILE}
+  
+  if [ $FORCE_DEFAULT ]
+  then 
+	  break
+  fi
+  
+  
   REPLIED=0
   while [[ $REPLIED -eq 0 ]]
   do
@@ -135,8 +169,12 @@ do
   fi
 done
 
-read -p "Do you want to start deployment? >" -r
-if [[ $REPLY =~ ^[Yy] ]]
+if [ ! $FORCE_DEFAULT ]
+then 
+	read -p "Do you want to start deployment? >" -r
+fi
+
+if [[ $REPLY =~ ^[Yy] || $FORCE_DEFAULT ]]
 then
   ./installer.sh ${CONFIGURATION_FILE}
 fi
