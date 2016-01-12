@@ -44,7 +44,8 @@ function install_service {
     NAME=${CATALOG_RECORD[0]//,}
     PLAN=${CATALOG_RECORD[1]//,}
     echo $NAME $PLAN
-    cf create-service ${NAME} ${PLAN} "my$1"
+    RETURN=($(cf create-service ${NAME} ${PLAN} "my$1"))
+	check_return
   else
     echo "Service my${1} already exists"
   fi
@@ -79,11 +80,13 @@ function provide_backend_endpoint {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating installer-backend-ups $SOME_INSTALLER_SERVICE"
-    cf cups installer-backend-ups   -p ${SOME_INSTALLER_SERVICE}
+    RETURN=($(cf cups installer-backend-ups   -p ${SOME_INSTALLER_SERVICE}))
   else
     echo "Updating installer-backend-ups $SOME_INSTALLER_SERVICE"
-    cf uups installer-backend-ups   -p ${SOME_INSTALLER_SERVICE}
+    RETURN=($(cf uups installer-backend-ups   -p ${SOME_INSTALLER_SERVICE}))
   fi
+  
+  check_return
 }
 
 function provide_dashboard_endpoint {
@@ -93,11 +96,12 @@ function provide_dashboard_endpoint {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating dashboard-endpoint-ups $DASHBOARD_SERVICE"
-    cf cups dashboard-endpoint-ups -p ${DASHBOARD_SERVICE}
+    RETURN=($(cf cups dashboard-endpoint-ups -p ${DASHBOARD_SERVICE}))
   else
     echo "Updating dashboard-endpoint-ups $DASHBOARD_SERVICE"
-    cf uups dashboard-endpoint-ups -p ${DASHBOARD_SERVICE}
+    RETURN=($(cf uups dashboard-endpoint-ups -p ${DASHBOARD_SERVICE}))
   fi
+  check_return
 }
 
 function provide_mail_credentials {
@@ -107,11 +111,13 @@ function provide_mail_credentials {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating mail-ups $MAIL_SERVICE"
-    cf cups mail-ups -p ${MAIL_SERVICE}
+    RETURN=($(cf cups mail-ups -p ${MAIL_SERVICE}))
   else 
     echo "Updating mail-ups $MAIL_SERVICE"
-    cf uups mail-ups -p ${MAIL_SERVICE}
+    RETURN=($(cf uups mail-ups -p ${MAIL_SERVICE}))
   fi
+  
+  check_return
 }
 
 function provide_installer_backend_credentials {
@@ -120,11 +126,13 @@ function provide_installer_backend_credentials {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating installer-backend-credentials-ups $INSTALLER_BACKEND_SERVICE"
-    cf cups installer-backend-user-credentials-ups -p ${INSTALLER_BACKEND_SERVICE}
+    RETURN=($(cf cups installer-backend-user-credentials-ups -p ${INSTALLER_BACKEND_SERVICE}))
   else
     echo "Updating installer-backend-credentials-ups $INSTALLER_BACKEND_SERVICE"
-    cf uups installer-backend-user-credentials-ups -p ${INSTALLER_BACKEND_SERVICE}
+    RETURN=($(cf uups installer-backend-user-credentials-ups -p ${INSTALLER_BACKEND_SERVICE}))
   fi
+  
+  check_return
 }
 
 function provide_websocket_credentials {
@@ -133,11 +141,13 @@ function provide_websocket_credentials {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating websocket-ups $WEBSOCKET_SERVICE"
-    cf cups websocket-ups -p ${WEBSOCKET_SERVICE}
+    RETURN=($(cf cups websocket-ups -p ${WEBSOCKET_SERVICE}))
   else
     echo "Updating websocket-ups $WEBSOCKET_SERVICE"
-    cf uups websocket-ups -p ${WEBSOCKET_SERVICE}
+    RETURN=($(cf uups websocket-ups -p ${WEBSOCKET_SERVICE}))
   fi
+  
+  check_return
 }
 
 function provide_rule_engine_credentials {
@@ -146,11 +156,13 @@ function provide_rule_engine_credentials {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating rule-engine-credentials-ups $RULE_ENGINE_SERVICE"
-    cf cups rule-engine-credentials-ups -p ${RULE_ENGINE_SERVICE}
+    RETURN=($(cf cups rule-engine-credentials-ups -p ${RULE_ENGINE_SERVICE}))
   else
     echo "Updating rule-engine-credentials-ups $RULE_ENGINE_SERVICE"
-    cf uups rule-engine-credentials-ups -p ${RULE_ENGINE_SERVICE}
+    RETURN=($(cf uups rule-engine-credentials-ups -p ${RULE_ENGINE_SERVICE}))
   fi
+  
+  check_return
 }
 
 function provide_gateway_credentials {
@@ -159,11 +171,12 @@ function provide_gateway_credentials {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating gateway-credentials-ups $GATEWAY_SERVICE"
-    cf cups gateway-credentials-ups -p ${GATEWAY_SERVICE}
+    RETURN=($(cf cups gateway-credentials-ups -p ${GATEWAY_SERVICE}))
   else
     echo "Updating gateway-credentials-ups $GATEWAY_SERVICE"
-    cf uups gateway-credentials-ups -p ${GATEWAY_SERVICE}
+    RETURN=($(cf uups gateway-credentials-ups -p ${GATEWAY_SERVICE}))
   fi
+  check_return
 }
 
 function provide_dashboard_security_credentials {
@@ -176,11 +189,13 @@ function provide_dashboard_security_credentials {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating dashboard-security-ups $SECURITY_CREDENTIALS"
-    cf cups dashboard-security-ups -p ${SECURITY_CREDENTIALS}
+    RETURN=($(cf cups dashboard-security-ups -p ${SECURITY_CREDENTIALS}))
   else
     echo "Updating dashboard-security-ups $SECURITY_CREDENTIALS"
-    cf uups dashboard-security-ups -p ${SECURITY_CREDENTIALS}
+    RETURN=($(cf uups dashboard-security-ups -p ${SECURITY_CREDENTIALS}))
   fi
+  
+  check_return
 }
 
 function provide_captcha_credentials {
@@ -189,11 +204,13 @@ function provide_captcha_credentials {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating recaptcha-ups $CAPTCHA_CREDENTIALS"
-    cf cups recaptcha-ups -p ${CAPTCHA_CREDENTIALS}
+    RETURN=($(cf cups recaptcha-ups -p ${CAPTCHA_CREDENTIALS}))
   else
     echo "Updating recaptcha-ups $CAPTCHA_CREDENTIALS"
-    cf uups recaptcha-ups -p ${CAPTCHA_CREDENTIALS}
+    RETURN=($(cf uups recaptcha-ups -p ${CAPTCHA_CREDENTIALS}))
   fi
+  
+  check_return
 }
 
 function deploy_backend {
@@ -201,13 +218,15 @@ function deploy_backend {
   EXISTS=$(check_app_exists ${APP_NAME})
   if [ $EXISTS -eq 1 ]
   then
-    cf d ${APP_NAME} -f
+    RETURN=($(cf d ${APP_NAME} -f))
+	check_return
   fi
   git clone ${GITHUB_SPACE}/iotanalytics-backend.git &&
   cd iotanalytics-backend/ &&
   make build #In case of correct build but failing tests  
   DOMAIN=$(get_default_domain)
-  cf push ${APP_NAME} -d ${DOMAIN}
+  RETURN=($(cf push ${APP_NAME} -d ${DOMAIN}))
+  check_return
   cd ..
 }
 function set_websocket_keys {
@@ -225,13 +244,15 @@ function deploy_websocket {
   EXISTS=$(check_app_exists ${APP_NAME})
   if [ $EXISTS -eq 1 ]
   then
-    cf d ${APP_NAME} -f
+    RETURN=($(cf d ${APP_NAME} -f))
+	check_return
   fi
   git clone ${GITHUB_SPACE}/iotanalytics-websocket-server.git &&
   cd iotanalytics-websocket-server &&
   set_websocket_keys &&
   DOMAIN=$(get_default_domain)
-  cf push ${APP_NAME} -d ${DOMAIN}
+  RETURN=($(cf push ${APP_NAME} -d ${DOMAIN}))
+  check_return
   cd ..
 }
 
@@ -240,12 +261,14 @@ function deploy_rule_engine {
   EXISTS=$(check_app_exists ${APP_NAME})
   if [ $EXISTS -eq 1 ]
   then
-    cf d ${APP_NAME} -f
+    RETURN=($(cf d ${APP_NAME} -f))
+	check_return
   fi
   git clone ${GITHUB_SPACE}/iotanalytics-rule-engine.git
   cd "iotanalytics-rule-engine" &&
   echo "Deploying rule engine" &&
-  ./cf-deploy.sh &&
+  ./cf-deploy.sh
+  check_exit_code
   cd ..
 }
 
@@ -270,9 +293,10 @@ function deploy_frontend {
   EXISTS=$(check_app_exists ${APP_NAME})
   if [ $EXISTS -eq 1 ]
   then
-    cf d ${APP_NAME} -f
+    RETURN=($(cf d ${APP_NAME} -f))
+	check_return
   fi 
-  git clone ${GITHUB_SPACE}/iotanalytics-dashboard.git &&
+  git clone ${GITHUB_SPACE}/iotanalytics-dashboard.git
   cd iotanalytics-dashboard &&
   mkdir -p ./public-interface/keys &&
   set_dashboard_keys &&
@@ -280,6 +304,7 @@ function deploy_frontend {
   npm -d install #NPM too often fail at the first time
   cd .. &&
   ./cf-deploy.sh
+  check_exit_code
   cd ..
 }
 
@@ -287,11 +312,13 @@ function create_space {
   EXISTS=$(check_space_exists ${1})
   if [ $EXISTS -eq 0 ]
   then    
-    cf create-space "${1}"
+    RETURN=($(cf create-space "${1}"))
+	check_return
   else 
     echo "Space ${1} already exists"
   fi
-  cf t -s "${1}"
+  RETURN=($(cf t -s "${1}"))
+  check_return
 }
 
 function deploy_services {
@@ -345,10 +372,26 @@ function destroy {
   EXISTS=$(check_space_exists ${1})
   if [ $EXISTS -eq 1 ]
   then
-    cf delete-space "$1"
+    RETURN=($(cf delete-space -f "$1"))
+	check_return
   else
     echo "Space ${1} not found."
   fi
+}
+
+function check_return {
+	echo "debug return:" $RETURN
+	if [ "$RETURN" = "FAILED" ]
+	then
+		exit 1
+	fi
+}
+
+function check_exit_code {
+	if [ $? -eq 1 ]
+	then
+		exit 1
+	fi
 }
 
 
