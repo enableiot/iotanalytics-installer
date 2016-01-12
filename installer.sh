@@ -380,7 +380,7 @@ function destroy {
 }
 
 function check_return {
-	echo "debug return:" $RETURN
+	echo $RETURN
 	if [ "$RETURN" = "FAILED" ]
 	then
 		exit 1
