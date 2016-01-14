@@ -264,7 +264,7 @@ function deploy_rule_engine {
     RETURN=($(cf d ${APP_NAME} -f))
 	check_return
   fi
-  git clone ${GITHUB_SPACE}/iotanalytics-rule-engine.git
+  git clone ${GITHUB_SPACE}/iotanalytics-rule-engine.git &&
   cd "iotanalytics-rule-engine" &&
   echo "Deploying rule engine" &&
   ./cf-deploy.sh
@@ -296,7 +296,7 @@ function deploy_frontend {
     RETURN=($(cf d ${APP_NAME} -f))
 	check_return
   fi 
-  git clone ${GITHUB_SPACE}/iotanalytics-dashboard.git
+  git clone ${GITHUB_SPACE}/iotanalytics-dashboard.git &&
   cd iotanalytics-dashboard &&
   mkdir -p ./public-interface/keys &&
   set_dashboard_keys &&
