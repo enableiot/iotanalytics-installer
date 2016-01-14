@@ -26,7 +26,7 @@ function check_space_exists {
 }
 
 function check_service_exists {
-  EXISTS=$(cf services | grep ${1} | wc -l)
+  EXISTS=$(echo "$SERVICES_RES" | grep ${1} | wc -l)
   echo $EXISTS
 }
 
@@ -40,7 +40,7 @@ function install_service {
   if [ $EXISTS -eq 0 ]
   then
     echo "Searching for service $1"
-    CATALOG_RECORD=($(cf m | grep $1 | head -n 1))
+    CATALOG_RECORD=($(echo "$MARKETPLACE_RES" | grep $1 | head -n 1))
     NAME=${CATALOG_RECORD[0]//,}
     PLAN=${CATALOG_RECORD[1]//,}
     echo $NAME $PLAN
@@ -346,11 +346,23 @@ function destroy {
   if [ $EXISTS -eq 1 ]
   then
     cf delete-space "$1"
+	clear_services
   else
     echo "Space ${1} not found."
   fi
 }
 
+function fetch_services {
+	SERVICES_RES=$(cf services)
+}
+
+function clear_services {
+	SERVICES_RES=""
+}
+
+function fetch_marketplace {
+	MARKETPLACE_RES=$(cf m)
+}
 
 CONFIGURATION_FILE=${1}
 if [ ! -f ${CONFIGURATION_FILE} ]
@@ -360,6 +372,9 @@ fi
 
 echo "Reading configuration file ${CONFIGURATION_FILE}"
 source ${CONFIGURATION_FILE}
+
+fetch_services
+fetch_marketplace
 
 if [ "x${CF_SPACE_NAME}" = "x" ]
 then
