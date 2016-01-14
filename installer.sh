@@ -26,7 +26,7 @@ function check_space_exists {
 }
 
 function check_service_exists {
-  EXISTS=$(cf services | grep ${1} | wc -l)
+  EXISTS=$(echo "$SERVICES_RES" | grep ${1} | wc -l)
   echo $EXISTS
 }
 
@@ -40,7 +40,7 @@ function install_service {
   if [ $EXISTS -eq 0 ]
   then
     echo "Searching for service $1"
-    CATALOG_RECORD=($(cf m | grep $1 | head -n 1))
+    CATALOG_RECORD=($(echo "$MARKETPLACE_RES" | grep $1 | head -n 1))
     NAME=${CATALOG_RECORD[0]//,}
     PLAN=${CATALOG_RECORD[1]//,}
     echo $NAME $PLAN
@@ -372,13 +372,19 @@ function destroy {
   EXISTS=$(check_space_exists ${1})
   if [ $EXISTS -eq 1 ]
   then
+<<<<<<< HEAD
     RETURN=($(cf delete-space -f "$1"))
 	check_return
+=======
+    cf delete-space "$1"
+	clear_services
+>>>>>>> a0e2661... Added fetching services only once on beginning of the script execution
   else
     echo "Space ${1} not found."
   fi
 }
 
+<<<<<<< HEAD
 function check_return {
 	echo $RETURN
 	if [ "$RETURN" = "FAILED" ]
@@ -394,6 +400,19 @@ function check_exit_code {
 	fi
 }
 
+=======
+function fetch_services {
+	SERVICES_RES=$(cf services)
+}
+
+function clear_services {
+	SERVICES_RES=""
+}
+
+function fetch_marketplace {
+	MARKETPLACE_RES=$(cf m)
+}
+>>>>>>> a0e2661... Added fetching services only once on beginning of the script execution
 
 CONFIGURATION_FILE=${1}
 if [ ! -f ${CONFIGURATION_FILE} ]
@@ -403,6 +422,9 @@ fi
 
 echo "Reading configuration file ${CONFIGURATION_FILE}"
 source ${CONFIGURATION_FILE}
+
+fetch_services
+fetch_marketplace
 
 if [ "x${CF_SPACE_NAME}" = "x" ]
 then
