@@ -372,19 +372,14 @@ function destroy {
   EXISTS=$(check_space_exists ${1})
   if [ $EXISTS -eq 1 ]
   then
-<<<<<<< HEAD
     RETURN=($(cf delete-space -f "$1"))
 	check_return
-=======
-    cf delete-space "$1"
 	clear_services
->>>>>>> a0e2661... Added fetching services only once on beginning of the script execution
   else
     echo "Space ${1} not found."
   fi
 }
 
-<<<<<<< HEAD
 function check_return {
 	echo $RETURN
 	if [ "$RETURN" = "FAILED" ]
@@ -400,7 +395,6 @@ function check_exit_code {
 	fi
 }
 
-=======
 function fetch_services {
 	SERVICES_RES=$(cf services)
 }
@@ -412,7 +406,6 @@ function clear_services {
 function fetch_marketplace {
 	MARKETPLACE_RES=$(cf m)
 }
->>>>>>> a0e2661... Added fetching services only once on beginning of the script execution
 
 CONFIGURATION_FILE=${1}
 if [ ! -f ${CONFIGURATION_FILE} ]
