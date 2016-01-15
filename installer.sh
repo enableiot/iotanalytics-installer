@@ -199,18 +199,18 @@ function provide_dashboard_security_credentials {
 }
 
 function provide_captcha_credentials {
-	CAPTCHA_CREDENTIALS="{\"siteKey\":\"${CAPTCHA_CREDENTIALS_SITE_KEY}\",\"secretKey\":\"${CAPTCHA_CREDENTIALS_SECRET_KEY}\"}"
-  EXISTS=$(check_service_exists recaptcha-ups)
-  if [ $EXISTS -eq 0 ]
-  then
-    echo "Creating recaptcha-ups $CAPTCHA_CREDENTIALS"
-    RETURN=($(cf cups recaptcha-ups -p ${CAPTCHA_CREDENTIALS}))
-  else
-    echo "Updating recaptcha-ups $CAPTCHA_CREDENTIALS"
-    RETURN=($(cf uups recaptcha-ups -p ${CAPTCHA_CREDENTIALS}))
-  fi
-  
-  check_return
+	CAPTCHA_CREDENTIALS="{\"siteKey\":\"${CAPTCHA_CREDENTIALS_SITE_KEY}\",\"secretKey\":\"${CAPTCHA_CREDENTIALS_SECRET_KEY}\",\"enabled\":\"${CAPTCHA_ENABLED}\"}"
+	EXISTS=$(check_service_exists recaptcha-ups)
+	if [ $EXISTS -eq 0 ]
+	then
+		echo "Creating recaptcha-ups $CAPTCHA_CREDENTIALS"
+		RETURN=($(cf cups recaptcha-ups -p ${CAPTCHA_CREDENTIALS}))
+	else
+		echo "Updating recaptcha-ups $CAPTCHA_CREDENTIALS"
+		RETURN=($(cf uups recaptcha-ups -p ${CAPTCHA_CREDENTIALS}))
+	fi
+
+	check_return
 }
 
 function deploy_backend {
