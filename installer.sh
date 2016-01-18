@@ -298,7 +298,6 @@ function deploy_frontend {
   fi 
   git clone ${GITHUB_SPACE}/iotanalytics-dashboard.git &&
   cd iotanalytics-dashboard &&
-  git checkout DPDP-369 &&
   mkdir -p ./public-interface/keys &&
   set_dashboard_keys &&
   cd ./public-interface &&
