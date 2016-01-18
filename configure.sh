@@ -134,7 +134,7 @@ do
   setup_field "RULE_ENGINE_SERVICE_PASSWORD" $(random_password)
   
   write_section "GOOGLE CAPTCHA CONFIGURATION"
-  setup_field "CAPTCHA_ENABLED" "false" "enable Google reCAPTCHA?"
+  setup_field "CAPTCHA_ENABLED" "false" "enable Google reCAPTCHA? (true-yes, false-no)"
   setup_field "CAPTCHA_CREDENTIALS_SITE_KEY" "" "google Captcha site key"
   setup_field "CAPTCHA_CREDENTIALS_SECRET_KEY" "" "google Captcha secret key"
  
