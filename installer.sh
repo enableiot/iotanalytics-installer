@@ -203,11 +203,11 @@ function provide_captcha_credentials {
 	EXISTS=$(check_service_exists recaptcha-ups)
 	if [ $EXISTS -eq 0 ]
 	then
-	echo "Creating recaptcha-ups $CAPTCHA_CREDENTIALS"
-	RETURN=($(cf cups recaptcha-ups -p ${CAPTCHA_CREDENTIALS}))
+		echo "Creating recaptcha-ups $CAPTCHA_CREDENTIALS"
+		RETURN=($(cf cups recaptcha-ups -p ${CAPTCHA_CREDENTIALS}))
 	else
-	echo "Updating recaptcha-ups $CAPTCHA_CREDENTIALS"
-	RETURN=($(cf uups recaptcha-ups -p ${CAPTCHA_CREDENTIALS}))
+		echo "Updating recaptcha-ups $CAPTCHA_CREDENTIALS"
+		RETURN=($(cf uups recaptcha-ups -p ${CAPTCHA_CREDENTIALS}))
 	fi
 
 	check_return
