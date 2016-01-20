@@ -322,7 +322,7 @@ function create_space {
 }
 
 function deploy_services {
-  install_service postgres &&
+  install_service postgresql93 &&
   install_service cdh &&
   install_service zookeeper-wssb &&
   install_service redis &&
