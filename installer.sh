@@ -44,7 +44,12 @@ function install_service {
     NAME=${CATALOG_RECORD[0]//,}
     PLAN=${CATALOG_RECORD[1]//,}
     echo $NAME $PLAN
-    RETURN=($(cf create-service ${NAME} ${PLAN} "my$1"))
+	if [ -z "$2" ];
+	then
+		RETURN=($(cf create-service ${NAME} ${PLAN} "my$1"))
+	else
+		RETURN=($(cf create-service ${NAME} ${PLAN} "my$2"))
+	fi
 	check_return
   else
     echo "Service my${1} already exists"
@@ -322,7 +327,7 @@ function create_space {
 }
 
 function deploy_services {
-  install_service postgres &&
+  install_service postgresql93 postgres &&
   install_service cdh &&
   install_service zookeeper-wssb &&
   install_service redis &&
