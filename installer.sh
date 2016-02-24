@@ -64,7 +64,7 @@ function get_default_domain {
 
 function get_backend_endpoint {
   DOMAIN=$(get_default_domain)
-  echo "http://${1}-installer-backend.${DOMAIN}"
+  echo "http://${1}-backend.${DOMAIN}"
 }
 
 function get_backend_device_measurement_table_name {
@@ -219,7 +219,7 @@ function provide_captcha_credentials {
 }
 
 function deploy_backend {
-  APP_NAME="${1}-installer-backend"
+  APP_NAME="${1}-backend"
   EXISTS=$(check_app_exists ${APP_NAME})
   if [ $EXISTS -eq 1 ]
   then
