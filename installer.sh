@@ -55,7 +55,8 @@ function install_service {
 
     echo $NAME $PLAN $NAME_FOR_SERVICE
 
-	RETURN=($(cf create-service ${NAME} "${PLAN}" "${NAME_FOR_SERVICE}"))
+	RETURN=("$(cf create-service ${NAME} "${PLAN}" "${NAME_FOR_SERVICE}")")
+
 	check_return
   else
     echo "Service my${1} already exists"
@@ -73,11 +74,6 @@ function get_backend_endpoint {
   echo "http://${1}-backend.${DOMAIN}"
 }
 
-function get_backend_device_measurement_table_name {
-  PREFIX=`echo ${1} | awk '{print toupper($0)}'`
-  echo "${PREFIX}-BACKEND_DEVICE_MEASUREMENT"
-}
-
 function get_dashboard_endpoint {
   DOMAIN=$(get_default_domain)
   echo "https://${1}-dashboard.${DOMAIN}"
@@ -85,16 +81,15 @@ function get_dashboard_endpoint {
 
 function provide_backend_endpoint {
   ADDRESS=$(get_backend_endpoint ${1})
-  DEVICE_MEASUREMENT_TABLE=$(get_backend_device_measurement_table_name ${1})
-  SOME_SERVICE="{\"host\":\"${ADDRESS}\",\"deviceMeasurementTableName\":\"${DEVICE_MEASUREMENT_TABLE}\"}"
-  EXISTS=$(check_service_exists backend-ups)
+  SOME_SERVICE="{\"host\":\"${ADDRESS}\"}"
+  EXISTS=$(check_service_exists aa-backend-ups)
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating aa-backend-ups $SOME_SERVICE"
-    RETURN=($(cf cups aa-backend-ups   -p ${SOME_SERVICE}))
+    RETURN=("$(cf cups aa-backend-ups   -p ${SOME_SERVICE})")
   else
     echo "Updating aa-backend-ups $SOME_SERVICE"
-    RETURN=($(cf uups aa-backend-ups   -p ${SOME_SERVICE}))
+    RETURN=("$(cf uups aa-backend-ups   -p ${SOME_SERVICE})")
   fi
   
   check_return
@@ -107,10 +102,10 @@ function provide_dashboard_endpoint {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating dashboard-endpoint-ups $DASHBOARD_SERVICE"
-    RETURN=($(cf cups dashboard-endpoint-ups -p ${DASHBOARD_SERVICE}))
+    RETURN=("$(cf cups dashboard-endpoint-ups -p ${DASHBOARD_SERVICE})")
   else
     echo "Updating dashboard-endpoint-ups $DASHBOARD_SERVICE"
-    RETURN=($(cf uups dashboard-endpoint-ups -p ${DASHBOARD_SERVICE}))
+    RETURN=("$(cf uups dashboard-endpoint-ups -p ${DASHBOARD_SERVICE})")
   fi
   check_return
 }
@@ -135,25 +130,10 @@ function provide_mail_credentials {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating mail-ups $MAIL_SERVICE"
-    RETURN=($(cf cups mail-ups -p ${MAIL_SERVICE}))
+    RETURN=("$(cf cups mail-ups -p ${MAIL_SERVICE})")
   else 
     echo "Updating mail-ups $MAIL_SERVICE"
-    RETURN=($(cf uups mail-ups -p ${MAIL_SERVICE}))
-  fi
-  
-  check_return
-}
-
-function provide_backend_credentials {
-  BACKEND_SERVICE="{\"username\":\"${BACKEND_SERVICE_USERNAME}\",\"password\":\"${BACKEND_SERVICE_PASSWORD}\"}"
-  EXISTS=$(check_service_exists backend-user-credentials-ups)
-  if [ $EXISTS -eq 0 ]
-  then
-    echo "Creating aa-backend-credentials-ups $BACKEND_SERVICE"
-    RETURN=($(cf cups aa-backend-user-credentials-ups -p ${BACKEND_SERVICE}))
-  else
-    echo "Updating aa-backend-credentials-ups $BACKEND_SERVICE"
-    RETURN=($(cf uups aa-backend-user-credentials-ups -p ${BACKEND_SERVICE}))
+    RETURN=("$(cf uups mail-ups -p ${MAIL_SERVICE})")
   fi
   
   check_return
@@ -165,10 +145,9 @@ function provide_websocket_credentials {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating websocket-ups $WEBSOCKET_SERVICE"
-    RETURN=($(cf cups websocket-ups -p ${WEBSOCKET_SERVICE}))
+    RETURN=("$(cf cups websocket-ups -p ${WEBSOCKET_SERVICE})")
   else
-    echo "Updating websocket-ups $WEBSOCKET_SERVICE"
-    RETURN=($(cf uups websocket-ups -p ${WEBSOCKET_SERVICE}))
+    echo "websocket-ups already exists."
   fi
   
   check_return
@@ -180,10 +159,9 @@ function provide_rule_engine_credentials {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating rule-engine-credentials-ups $RULE_ENGINE_SERVICE"
-    RETURN=($(cf cups rule-engine-credentials-ups -p ${RULE_ENGINE_SERVICE}))
+    RETURN=("$(cf cups rule-engine-credentials-ups -p ${RULE_ENGINE_SERVICE})")
   else
-    echo "Updating rule-engine-credentials-ups $RULE_ENGINE_SERVICE"
-    RETURN=($(cf uups rule-engine-credentials-ups -p ${RULE_ENGINE_SERVICE}))
+    echo "rule-engine-credentials-ups already exists."
   fi
   
   check_return
@@ -195,10 +173,9 @@ function provide_gateway_credentials {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating gateway-credentials-ups $GATEWAY_SERVICE"
-    RETURN=($(cf cups gateway-credentials-ups -p ${GATEWAY_SERVICE}))
+    RETURN=("$(cf cups gateway-credentials-ups -p ${GATEWAY_SERVICE})")
   else
-    echo "Updating gateway-credentials-ups $GATEWAY_SERVICE"
-    RETURN=($(cf uups gateway-credentials-ups -p ${GATEWAY_SERVICE}))
+    echo "gateway-credentials-ups already exists"
   fi
   check_return
 }
@@ -213,10 +190,10 @@ function provide_dashboard_security_credentials {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating dashboard-security-ups $SECURITY_CREDENTIALS"
-    RETURN=($(cf cups dashboard-security-ups -p ${SECURITY_CREDENTIALS}))
+    RETURN=("$(cf cups dashboard-security-ups -p ${SECURITY_CREDENTIALS})")
   else
     echo "Updating dashboard-security-ups $SECURITY_CREDENTIALS"
-    RETURN=($(cf uups dashboard-security-ups -p ${SECURITY_CREDENTIALS}))
+    RETURN=("$(cf uups dashboard-security-ups -p ${SECURITY_CREDENTIALS})")
   fi
   
   check_return
@@ -228,10 +205,10 @@ function provide_captcha_credentials {
 	if [ $EXISTS -eq 0 ]
 	then
 		echo "Creating recaptcha-ups $CAPTCHA_CREDENTIALS"
-		RETURN=($(cf cups recaptcha-ups -p ${CAPTCHA_CREDENTIALS}))
+		RETURN=("$(cf cups recaptcha-ups -p ${CAPTCHA_CREDENTIALS})")
 	else
 		echo "Updating recaptcha-ups $CAPTCHA_CREDENTIALS"
-		RETURN=($(cf uups recaptcha-ups -p ${CAPTCHA_CREDENTIALS}))
+		RETURN=("$(cf uups recaptcha-ups -p ${CAPTCHA_CREDENTIALS})")
 	fi
 
 	check_return
@@ -243,10 +220,10 @@ function provide_kerberos_credentials {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating kerberos-service $KERBEROS_SERVICE"
-    RETURN=($(cf cups kerberos-service -p ${KERBEROS_SERVICE}))
+    RETURN=("$(cf cups kerberos-service -p ${KERBEROS_SERVICE})")
   else
     echo "Updating kerberos-service $KERBEROS_SERVICE"
-    RETURN=($(cf uups kerberos-service -p ${KERBEROS_SERVICE}))
+    RETURN=("$(cf uups kerberos-service -p ${KERBEROS_SERVICE})")
   fi
 
   check_return
@@ -257,15 +234,19 @@ function deploy_backend {
     EXISTS=$(check_app_exists ${APP_NAME})
     if [ $EXISTS -eq 1 ]
     then
-        RETURN=($(cf d ${APP_NAME} -f))
+        RETURN=("$(cf d ${APP_NAME} -f)")
         check_return
     fi
-    git clone ${GITHUB_SPACE}/iotanalytics-backend.git &&
-    cd iotanalytics-backend/ &&
-    make build #In case of correct build but failing tests
+    if [ "x${DOWNLOAD_SOURCES_FROM_GITHUB}" = "x1" ]
+      then
+        git clone ${GITHUB_SPACE}/iotanalytics-backend.git
+    fi
+    echo 'Deploying iotanalytics-backend'
     DOMAIN=$(get_default_domain)
-    RETURN=($(cf push ${APP_NAME} -d ${DOMAIN}))
-    check_return
+    cd iotanalytics-backend/ &&
+    gradle clean build &&
+    cf push ${APP_NAME} -d ${DOMAIN} &&
+    check_exit_code
     cd ..
 }
 function set_websocket_keys {
@@ -283,14 +264,17 @@ function deploy_websocket {
   EXISTS=$(check_app_exists ${APP_NAME})
   if [ $EXISTS -eq 1 ]
   then
-    RETURN=($(cf d ${APP_NAME} -f))
+    RETURN=("$(cf d ${APP_NAME} -f)")
 	check_return
   fi
-  git clone ${GITHUB_SPACE}/iotanalytics-websocket-server.git &&
+  if [ "x${DOWNLOAD_SOURCES_FROM_GITHUB}" = "x1" ]
+     then
+       git clone ${GITHUB_SPACE}/iotanalytics-websocket-server.git
+  fi
   cd iotanalytics-websocket-server &&
   set_websocket_keys &&
   DOMAIN=$(get_default_domain)
-  RETURN=($(cf push ${APP_NAME} -d ${DOMAIN}))
+  RETURN=("$(cf push ${APP_NAME} -d ${DOMAIN})")
   check_return
   cd ..
 }
@@ -300,10 +284,14 @@ function deploy_rule_engine_app {
   EXISTS=$(check_app_exists ${APP_NAME})
   if [ $EXISTS -eq 1 ]
   then
-    RETURN=($(cf d ${APP_NAME} -f))
+    RETURN=("$(cf d ${APP_NAME} -f)")
 	check_return
   fi
-  git clone ${GITHUB_SPACE}/iotanalytics-gearpump-rule-engine.git &&
+  if [ "x${DOWNLOAD_SOURCES_FROM_GITHUB}" = "x1" ]
+    then
+      git clone ${GITHUB_SPACE}/iotanalytics-gearpump-rule-engine.git
+  fi
+
   cd "iotanalytics-gearpump-rule-engine" &&
   echo "Deploying rule engine app" &&
   ./cf-deploy.sh
@@ -334,10 +322,14 @@ function deploy_frontend {
   EXISTS=$(check_app_exists ${APP_NAME})
   if [ $EXISTS -eq 1 ]
   then
-    RETURN=($(cf d ${APP_NAME} -f))
+    RETURN=("$(cf d ${APP_NAME} -f)")
 	check_return
-  fi 
-  git clone ${GITHUB_SPACE}/iotanalytics-dashboard.git &&
+  fi
+  if [ "x${DOWNLOAD_SOURCES_FROM_GITHUB}" = "x1" ]
+  then
+    git clone ${GITHUB_SPACE}/iotanalytics-dashboard.git
+  fi
+
   cd iotanalytics-dashboard &&
   mkdir -p ./public-interface/keys &&
   set_dashboard_keys &&
@@ -354,13 +346,13 @@ function create_space {
   if [ $EXISTS -eq 0 ]
   then
     echo "Creating space: ${1} ..."
-    RETURN=($(cf create-space "${1}"))
+    RETURN=("$(cf create-space "${1}")")
 	check_return
   else 
     echo "Space ${1} already exists"
     fetch_services
   fi
-  RETURN=($(cf t -s "${1}"))
+  RETURN=("$(cf t -s "${1}")")
   check_return
 }
 
@@ -376,11 +368,10 @@ function deploy_services {
   then
     install_service gearpump "1 worker"
   fi
-  provide_backend_endpoint ${1} &&  
+  provide_backend_endpoint ${1} &&
   provide_dashboard_endpoint ${1} &&
   provide_kafka_configuration &&
   provide_mail_credentials &&
-  provide_backend_credentials &&
   provide_websocket_credentials &&
   provide_captcha_credentials &&
   provide_rule_engine_credentials &&
@@ -391,7 +382,11 @@ function deploy_services {
 }
 
 function deploy_apps {
-  rm -rf temp/ &&
+  if [ "x${DOWNLOAD_SOURCES_FROM_GITHUB}" = "x1" ]
+  then
+    rm -rf temp/
+  fi
+
   mkdir -p temp &&
   cd temp &&
   deploy_frontend ${1} &&
@@ -424,7 +419,7 @@ function destroy {
     EXISTS=$(check_space_exists ${1})
     if [ $EXISTS -eq 1 ]
     then
-        RETURN=($(cf delete-space -f "$1"))
+        RETURN=("$(cf delete-space -f "$1")")
         check_return
     else
         echo "Space ${1} not found."
@@ -433,7 +428,9 @@ function destroy {
 
 function check_return {
 	echo $RETURN
-	if [ "$RETURN" = "FAILED" ]
+	FAILED=$(echo $RETURN | grep "FAILED" | wc -l)
+
+	if [ "$FAILED" -eq 1 ]
 	then
 		exit 1
 	fi

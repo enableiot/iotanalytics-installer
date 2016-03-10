@@ -85,7 +85,38 @@ do
 
 		    shift
 		;;
-		*)
+		--no-download)
+		    NO_DOWNLOAD=1
+            shift
+        ;;
+		-cf-space)
+		    CUSTOM_SPACE=1
+
+            if [ -z "$2" ];
+            then
+                echo "Please provide cf space name after -cf-space option"
+                exit 0
+            else
+                CUSTOM_SPACE_NAME="$2"
+            fi
+            shift
+        ;;
+        -kerberos-properties)
+            CUSTOM_KERBEROS_PROP=1
+
+            if [ -z "$2" ] || [ -z "$3" ] || [ -z "$4" ] || [ -z "$5" ];
+            then
+                echo "Please provide kerberos kdc, kerberos username, kerberos user's password, kerberos realm after -kerberos-properties"
+                exit 0
+            else
+                KERBEROS_SERVICE_KDC=$2
+                KERBEROS_SERVICE_PASSWORD=$3
+                KERBEROS_SERVICE_USER=$4
+                KERBEROS_SERVICE_REALM=$5
+            fi
+            shift 4
+        ;;
+        *)
             echo "Run script with -d or --default option to run non-interactively and set all to defaults"
             exit 0
 		;;
@@ -123,10 +154,20 @@ do
     then
     setup_field "GITHUB_SPACE" "https://github.com/enableiot" "Git repository to download packages"
   fi
-
-  setup_field "CF_SPACE_NAME" "installer" "Cloud Foundry Space Name"
+  if [ ! $CUSTOM_SPACE ]
+  then
+    setup_field "CF_SPACE_NAME" "installer" "Cloud Foundry Space Name"
+  else
+    setup_field "CF_SPACE_NAME" ${CUSTOM_SPACE_NAME} "Cloud Foundry Space Name"
+  fi
   setup_field "FORCE" 0 "remove and create from scratch" 
-  setup_field "DEPLOY_APPS" 1 "set only variables (0), install apps (1)" 
+  setup_field "DEPLOY_APPS" 1 "set only variables (0), install apps (1)"
+  if [ ! $NO_DOWNLOAD ]
+  then
+    setup_field "DOWNLOAD_SOURCES_FROM_GITHUB" 1 "use previously downloaded enableiot applications sources (0), download enableiot applications sources (1)"
+  else
+    setup_field "DOWNLOAD_SOURCES_FROM_GITHUB" 0
+  fi
 
   get_default_domain
   write_section "MAIL SERVER"
@@ -149,10 +190,19 @@ do
   setup_field "RULE_ENGINE_SERVICE_PASSWORD" $(random_password)
 
   write_section "KERBEROS CREDENTIALS"
-  setup_field "KERBEROS_SERVICE_KDC" "example.kdc.com"
-  setup_field "KERBEROS_SERVICE_PASSWORD" $(random_password)
-  setup_field "KERBEROS_SERVICE_REALM" "example_realm"
-  setup_field "KERBEROS_SERVICE_USER" "example_user"
+  if [ ! "$CUSTOM_KERBEROS_PROP" ]
+  then
+    setup_field "KERBEROS_SERVICE_KDC" "example.kdc.com"
+    setup_field "KERBEROS_SERVICE_PASSWORD" $(random_password)
+    setup_field "KERBEROS_SERVICE_REALM" "example_realm"
+    setup_field "KERBEROS_SERVICE_USER" "example_user"
+  else
+    setup_field "KERBEROS_SERVICE_KDC" ${KERBEROS_SERVICE_KDC}
+    setup_field "KERBEROS_SERVICE_PASSWORD" ${KERBEROS_SERVICE_PASSWORD}
+    setup_field "KERBEROS_SERVICE_REALM" ${KERBEROS_SERVICE_REALM}
+    setup_field "KERBEROS_SERVICE_USER" ${KERBEROS_SERVICE_USER}
+  fi
+
   
   write_section "GOOGLE CAPTCHA CONFIGURATION"
   setup_field "CAPTCHA_ENABLED" "false" "enable Google reCAPTCHA? (true-yes, false-no)"
