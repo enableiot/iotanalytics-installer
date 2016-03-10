@@ -23,6 +23,11 @@ function random_password {
   echo $p
 }
 
+function get_default_domain {
+  DEFAULT_DOMAIN=($(cf domains | head -n 3 | tail -1))
+  DOMAIN=${DEFAULT_DOMAIN[0]}
+}
+
 function generate_keys {
   openssl genrsa -out ${KEYS_DIR}/private.pem 2048 &&
   openssl rsa -in ${KEYS_DIR}/private.pem -pubout -out ${KEYS_DIR}/public.pem &&
@@ -68,12 +73,21 @@ do
 
 	case $key in
 		-d|--default)
-		FORCE_DEFAULT=1
-		shift
+            FORCE_DEFAULT=1
+
+            if [ -z "$2" ];
+            then
+                echo "Please provide github space after -d or --default option"
+                exit 0
+            else
+                GITHUB_SPACE="$2"
+            fi
+
+		    shift
 		;;
 		*)
-		echo "Run script with -d or --default option to run non-interactively and set all to defaults"
-		exit 0
+            echo "Run script with -d or --default option to run non-interactively and set all to defaults"
+            exit 0
 		;;
 	esac
 	shift
@@ -104,25 +118,26 @@ do
   fi
   
   write_section "Common config"
-  setup_field "GITHUB_SPACE" "https://github.com/enableiot" "Git repository to download packages"
-  setup_field "CF_SPACE_NAME" "installer" "Cloud Foudry Space Name"
+
+  if [ -z "$GITHUB_SPACE" ];
+    then
+    setup_field "GITHUB_SPACE" "https://github.com/enableiot" "Git repository to download packages"
+  fi
+
+  setup_field "CF_SPACE_NAME" "installer" "Cloud Foundry Space Name"
   setup_field "FORCE" 0 "remove and create from scratch" 
   setup_field "DEPLOY_APPS" 1 "set only variables (0), install apps (1)" 
-  
+
+  get_default_domain
   write_section "MAIL SERVER"
-  setup_field "MAIL_SERVICE_HOST" "email.example.com"
-  setup_field "MAIL_SERVICE_PORT" 587 
-  setup_field "MAIL_SERVICE_SECURE" "false" 
-  setup_field "MAIL_SERVICE_USER" "example_user"
-  setup_field "MAIL_SERVICE_PASSWORD" "example_password"
-  setup_field "MAIL_SERVICE_SENDER" "example_user@email.example.com"
+  setup_field "MAIL_SERVICE_SENDER" "example_user@"$DOMAIN
    
   write_section "BACKEND CREDENTIALS"
-  setup_field "INSTALLER_BACKEND_SERVICE_USERNAME" "backend@example.com" "user to communicate with backend"
-  setup_field "INSTALLER_BACKEND_SERVICE_PASSWORD" $(random_password)
+  setup_field "BACKEND_SERVICE_USERNAME" "backend@example.com" "user to communicate with backend"
+  setup_field "BACKEND_SERVICE_PASSWORD" $(random_password)
   
   write_section "GATEWAY CREDENTIALS"
-  setup_field "GATEWAY_SERVICE_USERNAME" "gateway@example.com" "user with data ingestion priveleges for MQTT"
+  setup_field "GATEWAY_SERVICE_USERNAME" "gateway@example.com" "user with data ingestion privileges for MQTT"
   setup_field "GATEWAY_SERVICE_PASSWORD" $(random_password)
   
   write_section "WEBSOCKET CREDENTIALS"
@@ -132,6 +147,12 @@ do
   write_section "RULE ENGINE CREDENTIALS"
   setup_field "RULE_ENGINE_SERVICE_USERNAME" "rule_engine@example.com" 
   setup_field "RULE_ENGINE_SERVICE_PASSWORD" $(random_password)
+
+  write_section "KERBEROS CREDENTIALS"
+  setup_field "KERBEROS_SERVICE_KDC" "example.kdc.com"
+  setup_field "KERBEROS_SERVICE_PASSWORD" $(random_password)
+  setup_field "KERBEROS_SERVICE_REALM" "example_realm"
+  setup_field "KERBEROS_SERVICE_USER" "example_user"
   
   write_section "GOOGLE CAPTCHA CONFIGURATION"
   setup_field "CAPTCHA_ENABLED" "false" "enable Google reCAPTCHA? (true-yes, false-no)"

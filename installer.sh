@@ -35,21 +35,27 @@ function check_app_exists {
   echo $EXISTS
 }
 
+# ${1} service name in marketplace
+# ${2} service plan in marketplace
+# ${3} (optional) name for service to be created; my${1} if not provided
 function install_service {
   EXISTS=$(check_service_exists "my${1}")
   if [ $EXISTS -eq 0 ]
   then
-    echo "Searching for service $1"
-    CATALOG_RECORD=($(echo "$MARKETPLACE_RES" | grep $1 | head -n 1))
-    NAME=${CATALOG_RECORD[0]//,}
-    PLAN=${CATALOG_RECORD[1]//,}
-    echo $NAME $PLAN
-	if [ -z "$2" ];
+    echo "Creating service my${1}"
+    NAME="$1"
+    PLAN="$2"
+
+    if [ -z "$3" ];
 	then
-		RETURN=($(cf create-service ${NAME} ${PLAN} "my$1"))
+		NAME_FOR_SERVICE="my$1"
 	else
-		RETURN=($(cf create-service ${NAME} ${PLAN} "my$2"))
+		NAME_FOR_SERVICE="my$3"
 	fi
+
+    echo $NAME $PLAN $NAME_FOR_SERVICE
+
+	RETURN=($(cf create-service ${NAME} "${PLAN}" "${NAME_FOR_SERVICE}"))
 	check_return
   else
     echo "Service my${1} already exists"
@@ -69,7 +75,7 @@ function get_backend_endpoint {
 
 function get_backend_device_measurement_table_name {
   PREFIX=`echo ${1} | awk '{print toupper($0)}'`
-  echo "${PREFIX}-INSTALLER-BACKEND_DEVICE_MEASUREMENT"
+  echo "${PREFIX}-BACKEND_DEVICE_MEASUREMENT"
 }
 
 function get_dashboard_endpoint {
@@ -80,15 +86,15 @@ function get_dashboard_endpoint {
 function provide_backend_endpoint {
   ADDRESS=$(get_backend_endpoint ${1})
   DEVICE_MEASUREMENT_TABLE=$(get_backend_device_measurement_table_name ${1})
-  SOME_INSTALLER_SERVICE="{\"host\":\"${ADDRESS}\",\"deviceMeasurementTableName\":\"${DEVICE_MEASUREMENT_TABLE}\"}"
-  EXISTS=$(check_service_exists installer-backend-ups)
+  SOME_SERVICE="{\"host\":\"${ADDRESS}\",\"deviceMeasurementTableName\":\"${DEVICE_MEASUREMENT_TABLE}\"}"
+  EXISTS=$(check_service_exists backend-ups)
   if [ $EXISTS -eq 0 ]
   then
-    echo "Creating installer-backend-ups $SOME_INSTALLER_SERVICE"
-    RETURN=($(cf cups installer-backend-ups   -p ${SOME_INSTALLER_SERVICE}))
+    echo "Creating aa-backend-ups $SOME_SERVICE"
+    RETURN=($(cf cups aa-backend-ups   -p ${SOME_SERVICE}))
   else
-    echo "Updating installer-backend-ups $SOME_INSTALLER_SERVICE"
-    RETURN=($(cf uups installer-backend-ups   -p ${SOME_INSTALLER_SERVICE}))
+    echo "Updating aa-backend-ups $SOME_SERVICE"
+    RETURN=($(cf uups aa-backend-ups   -p ${SOME_SERVICE}))
   fi
   
   check_return
@@ -109,9 +115,22 @@ function provide_dashboard_endpoint {
   check_return
 }
 
+function provide_kafka_configuration {
+  KAFKA_CONF="{\"topic\":\"metrics\",\"enabled\":true,\"partitions\":1,\"replication\":1,\"timeout_ms\":10000}"
+  EXISTS=$(check_service_exists kafka-ups)
+  if [ $EXISTS -eq 0 ]
+  then
+    echo "Creating kafka-ups $KAFKA_CONF"
+    cf cups kafka-ups -p ${KAFKA_CONF}
+  else
+    echo "Updating kafka-ups $KAFKA_CONF"
+    cf uups kafka-ups -p ${KAFKA_CONF}
+  fi
+}
+
+
 function provide_mail_credentials {
-  MAIL_SERVICE='{"host":"'${MAIL_SERVICE_HOST}'","port":'${MAIL_SERVICE_PORT}',"secureConnection":'${MAIL_SERVICE_SECURE}',"user":"'${MAIL_SERVICE_USER}'","pass":"'${MAIL_SERVICE_PASSWORD}'","sender":"'${MAIL_SERVICE_SENDER}'"}'
-  echo $MAIL_SERVICE
+  MAIL_SERVICE="{\"sender\":\"${MAIL_SERVICE_SENDER}\"}"
   EXISTS=$(check_service_exists mail-ups)
   if [ $EXISTS -eq 0 ]
   then
@@ -125,16 +144,16 @@ function provide_mail_credentials {
   check_return
 }
 
-function provide_installer_backend_credentials {
-  INSTALLER_BACKEND_SERVICE="{\"username\":\"${INSTALLER_BACKEND_SERVICE_USERNAME}\",\"password\":\"${INSTALLER_BACKEND_SERVICE_PASSWORD}\"}"
-  EXISTS=$(check_service_exists installer-backend-user-credentials-ups)
+function provide_backend_credentials {
+  BACKEND_SERVICE="{\"username\":\"${BACKEND_SERVICE_USERNAME}\",\"password\":\"${BACKEND_SERVICE_PASSWORD}\"}"
+  EXISTS=$(check_service_exists backend-user-credentials-ups)
   if [ $EXISTS -eq 0 ]
   then
-    echo "Creating installer-backend-credentials-ups $INSTALLER_BACKEND_SERVICE"
-    RETURN=($(cf cups installer-backend-user-credentials-ups -p ${INSTALLER_BACKEND_SERVICE}))
+    echo "Creating aa-backend-credentials-ups $BACKEND_SERVICE"
+    RETURN=($(cf cups aa-backend-user-credentials-ups -p ${BACKEND_SERVICE}))
   else
-    echo "Updating installer-backend-credentials-ups $INSTALLER_BACKEND_SERVICE"
-    RETURN=($(cf uups installer-backend-user-credentials-ups -p ${INSTALLER_BACKEND_SERVICE}))
+    echo "Updating aa-backend-credentials-ups $BACKEND_SERVICE"
+    RETURN=($(cf uups aa-backend-user-credentials-ups -p ${BACKEND_SERVICE}))
   fi
   
   check_return
@@ -218,21 +237,36 @@ function provide_captcha_credentials {
 	check_return
 }
 
-function deploy_backend {
-  APP_NAME="${1}-backend"
-  EXISTS=$(check_app_exists ${APP_NAME})
-  if [ $EXISTS -eq 1 ]
+function provide_kerberos_credentials {
+  KERBEROS_SERVICE="{\"kdc\":\"${KERBEROS_SERVICE_KDC}\",\"kpassword\":\"${KERBEROS_SERVICE_PASSWORD}\",\"krealm\":\"${KERBEROS_SERVICE_REALM}\",\"kuser\":\"${KERBEROS_SERVICE_USER}\"}"
+  EXISTS=$(check_service_exists kerberos-service)
+  if [ $EXISTS -eq 0 ]
   then
-    RETURN=($(cf d ${APP_NAME} -f))
-	check_return
+    echo "Creating kerberos-service $KERBEROS_SERVICE"
+    RETURN=($(cf cups kerberos-service -p ${KERBEROS_SERVICE}))
+  else
+    echo "Updating kerberos-service $KERBEROS_SERVICE"
+    RETURN=($(cf uups kerberos-service -p ${KERBEROS_SERVICE}))
   fi
-  git clone ${GITHUB_SPACE}/iotanalytics-backend.git &&
-  cd iotanalytics-backend/ &&
-  make build #In case of correct build but failing tests  
-  DOMAIN=$(get_default_domain)
-  RETURN=($(cf push ${APP_NAME} -d ${DOMAIN}))
+
   check_return
-  cd ..
+}
+
+function deploy_backend {
+    APP_NAME="${1}-backend"
+    EXISTS=$(check_app_exists ${APP_NAME})
+    if [ $EXISTS -eq 1 ]
+    then
+        RETURN=($(cf d ${APP_NAME} -f))
+        check_return
+    fi
+    git clone ${GITHUB_SPACE}/iotanalytics-backend.git &&
+    cd iotanalytics-backend/ &&
+    make build #In case of correct build but failing tests
+    DOMAIN=$(get_default_domain)
+    RETURN=($(cf push ${APP_NAME} -d ${DOMAIN}))
+    check_return
+    cd ..
 }
 function set_websocket_keys {
     mkdir -p security &&
@@ -261,7 +295,7 @@ function deploy_websocket {
   cd ..
 }
 
-function deploy_rule_engine {
+function deploy_rule_engine_app {
   APP_NAME="${1}-rule-engine"
   EXISTS=$(check_app_exists ${APP_NAME})
   if [ $EXISTS -eq 1 ]
@@ -269,13 +303,15 @@ function deploy_rule_engine {
     RETURN=($(cf d ${APP_NAME} -f))
 	check_return
   fi
-  git clone ${GITHUB_SPACE}/iotanalytics-rule-engine.git &&
-  cd "iotanalytics-rule-engine" &&
-  echo "Deploying rule engine" &&
+  git clone ${GITHUB_SPACE}/iotanalytics-gearpump-rule-engine.git &&
+  cd "iotanalytics-gearpump-rule-engine" &&
+  echo "Deploying rule engine app" &&
   ./cf-deploy.sh
   check_exit_code
   cd ..
 }
+
+
 
 function set_dashboard_keys {
     mkdir -p keys &&
@@ -316,31 +352,41 @@ function deploy_frontend {
 function create_space {
   EXISTS=$(check_space_exists ${1})
   if [ $EXISTS -eq 0 ]
-  then    
+  then
+    echo "Creating space: ${1} ..."
     RETURN=($(cf create-space "${1}"))
 	check_return
   else 
     echo "Space ${1} already exists"
+    fetch_services
   fi
   RETURN=($(cf t -s "${1}"))
   check_return
 }
 
 function deploy_services {
-  install_service postgresql93 postgres &&
-  install_service cdh &&
-  install_service zookeeper-wssb &&
-  install_service redis &&
-  install_service hdfs &&     
+  install_service postgresql93 free postgres &&
+  install_service zookeeper shared &&
+  install_service redis28 free redis &&
+  install_service hdfs bare &&
+  install_service kafka shared &&
+  install_service hbase shared &&
+  install_service smtp shared
+  if [ "x${DEPLOY_RULE_ENGINE}" = "x1" ]
+  then
+    install_service gearpump "1 worker"
+  fi
   provide_backend_endpoint ${1} &&  
   provide_dashboard_endpoint ${1} &&
+  provide_kafka_configuration &&
   provide_mail_credentials &&
-  provide_installer_backend_credentials &&
+  provide_backend_credentials &&
   provide_websocket_credentials &&
   provide_captcha_credentials &&
   provide_rule_engine_credentials &&
   provide_gateway_credentials &&
   provide_dashboard_security_credentials &&
+  provide_kerberos_credentials &&
   echo "All services created or updated successfully!"
 }
 
@@ -352,7 +398,7 @@ function deploy_apps {
   deploy_backend ${1}
   if [ "x${DEPLOY_RULE_ENGINE}" = "x1" ]
   then
-    deploy_rule_engine ${1}
+    deploy_rule_engine_app ${1}
   fi
   if [ "x${DEPLOY_WEBSOCKET}" = "x1" ]
   then
@@ -374,15 +420,15 @@ function deploy {
 }
 
 function destroy {
-  EXISTS=$(check_space_exists ${1})
-  if [ $EXISTS -eq 1 ]
-  then
-    RETURN=($(cf delete-space -f "$1"))
-	check_return
-	clear_services
-  else
-    echo "Space ${1} not found."
-  fi
+    clear_services
+    EXISTS=$(check_space_exists ${1})
+    if [ $EXISTS -eq 1 ]
+    then
+        RETURN=($(cf delete-space -f "$1"))
+        check_return
+    else
+        echo "Space ${1} not found."
+    fi
 }
 
 function check_return {
@@ -408,9 +454,6 @@ function clear_services {
 	SERVICES_RES=""
 }
 
-function fetch_marketplace {
-	MARKETPLACE_RES=$(cf m)
-}
 
 CONFIGURATION_FILE=${1}
 if [ ! -f ${CONFIGURATION_FILE} ]
@@ -420,9 +463,6 @@ fi
 
 echo "Reading configuration file ${CONFIGURATION_FILE}"
 source ${CONFIGURATION_FILE}
-
-fetch_services
-fetch_marketplace
 
 if [ "x${CF_SPACE_NAME}" = "x" ]
 then
