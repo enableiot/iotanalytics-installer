@@ -82,14 +82,14 @@ function get_dashboard_endpoint {
 function provide_backend_endpoint {
   ADDRESS=$(get_backend_endpoint ${1})
   SOME_SERVICE="{\"host\":\"${ADDRESS}\"}"
-  EXISTS=$(check_service_exists aa-backend-ups)
+  EXISTS=$(check_service_exists backend-ups)
   if [ $EXISTS -eq 0 ]
   then
-    echo "Creating aa-backend-ups $SOME_SERVICE"
-    RETURN=("$(cf cups aa-backend-ups   -p ${SOME_SERVICE})")
+    echo "Creating backend-ups $SOME_SERVICE"
+    RETURN=("$(cf cups backend-ups   -p ${SOME_SERVICE})")
   else
-    echo "Updating aa-backend-ups $SOME_SERVICE"
-    RETURN=("$(cf uups aa-backend-ups   -p ${SOME_SERVICE})")
+    echo "Updating backend-ups $SOME_SERVICE"
+    RETURN=("$(cf uups backend-ups   -p ${SOME_SERVICE})")
   fi
   
   check_return
