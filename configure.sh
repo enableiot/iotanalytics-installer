@@ -87,7 +87,9 @@ do
 		;;
 		--no-download)
 		    NO_DOWNLOAD=1
-            shift
+        ;;
+        --skip-ssl-validation)
+            SKIP_SSL_VALIDATION=1
         ;;
 		-cf-space)
 		    CUSTOM_SPACE=1
@@ -149,6 +151,13 @@ do
   fi
   
   write_section "Common config"
+
+  if [ -z "$SKIP_SSL_VALIDATION" ];
+    then
+    setup_field "DASHBOARD_STRICT_SSL" "true" "Strict SSL certificate verification active for Dashboard connections"
+    else
+    setup_field "DASHBOARD_STRICT_SSL" "false" "Strict SSL certificate verification not active for Dashboard connections"
+  fi
 
   if [ -z "$GITHUB_SPACE" ];
     then

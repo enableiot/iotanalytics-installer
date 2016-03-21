@@ -56,7 +56,7 @@ chmod +x ./configure.sh &&
 chmod +x ./installer.sh &&
 if [ ! "$KERBEROS_ENABLED" ]
 then
-    ./configure.sh -d ${GITHUB_SPACE} -cf-space ${CF_TEST_SPACE} --no-download
+    ./configure.sh -d ${GITHUB_SPACE} -cf-space ${CF_TEST_SPACE} --no-download --skip-ssl-validation
 else
     cf t -o ${CF_ORG} -s ${CF_SPACE} &&
     KDC=$(get_property_from_vcap kdc) &&
@@ -64,5 +64,5 @@ else
     KUSER=$(get_property_from_vcap kuser) &&
     KREALM=$(get_property_from_vcap krealm) &&
     cf t -o ${CF_TEST_ORG} &&
-    ./configure.sh -d ${GITHUB_SPACE} -cf-space ${CF_TEST_SPACE} -kerberos-properties $KDC $KPASSWORD $KUSER $KREALM --no-download
+    ./configure.sh -d ${GITHUB_SPACE} -cf-space ${CF_TEST_SPACE} -kerberos-properties $KDC $KPASSWORD $KUSER $KREALM --no-download --skip-ssl-validation
 fi

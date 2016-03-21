@@ -97,7 +97,7 @@ function provide_backend_endpoint {
 
 function provide_dashboard_endpoint {
   ADDRESS=$(get_dashboard_endpoint ${1})
-  DASHBOARD_SERVICE="{\"host\":\"${ADDRESS}\"}"
+  DASHBOARD_SERVICE="{\"host\":\"${ADDRESS}\",\"strictSSL\":${DASHBOARD_STRICT_SSL}}"
   EXISTS=$(check_service_exists dashboard-endpoint-ups)
   if [ $EXISTS -eq 0 ]
   then
