@@ -39,19 +39,20 @@ function check_app_exists {
 # ${2} service plan in marketplace
 # ${3} (optional) name for service to be created; my${1} if not provided
 function install_service {
-  EXISTS=$(check_service_exists "my${1}")
-  if [ $EXISTS -eq 0 ]
-  then
-    echo "Creating service my${1}"
-    NAME="$1"
-    PLAN="$2"
 
-    if [ -z "$3" ];
+  if [ -z "$3" ];
 	then
 		NAME_FOR_SERVICE="my$1"
 	else
 		NAME_FOR_SERVICE="my$3"
 	fi
+
+  EXISTS=$(check_service_exists "${NAME_FOR_SERVICE}")
+  if [ $EXISTS -eq 0 ]
+  then
+    echo "Creating service my${1}"
+    NAME="$1"
+    PLAN="$2"
 
     echo $NAME $PLAN $NAME_FOR_SERVICE
 
@@ -348,12 +349,17 @@ function create_space {
     echo "Creating space: ${1} ..."
     RETURN=("$(cf create-space "${1}")")
 	check_return
+
+	RETURN=("$(cf t -s "${1}")")
+    check_return
   else 
     echo "Space ${1} already exists"
+
+    RETURN=("$(cf t -s "${1}")")
+    check_return
+
     fetch_services
   fi
-  RETURN=("$(cf t -s "${1}")")
-  check_return
 }
 
 function deploy_services {
