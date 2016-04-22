@@ -368,7 +368,7 @@ function deploy_services {
   install_service redis28 free redis &&
   install_service hdfs bare &&
   install_service kafka shared &&
-  install_service hbase shared &&
+  install_service hbase bare &&
   install_service smtp shared
   if [ "x${DEPLOY_RULE_ENGINE}" = "x1" ]
   then
