@@ -44,13 +44,13 @@ function install_service {
 	then
 		NAME_FOR_SERVICE="my$1"
 	else
-		NAME_FOR_SERVICE="my$3"
+		NAME_FOR_SERVICE="$3"
 	fi
 
   EXISTS=$(check_service_exists "${NAME_FOR_SERVICE}")
   if [ $EXISTS -eq 0 ]
   then
-    echo "Creating service my${1}"
+    echo "Creating service ${NAME_FOR_SERVICE}"
     NAME="$1"
     PLAN="$2"
 
@@ -60,7 +60,7 @@ function install_service {
 
 	check_return
   else
-    echo "Service my${1} already exists"
+    echo "Service ${NAME_FOR_SERVICE} already exists"
   fi
 }
 
@@ -215,21 +215,6 @@ function provide_captcha_credentials {
 	check_return
 }
 
-function provide_kerberos_credentials {
-  KERBEROS_SERVICE="{\"kdc\":\"${KERBEROS_SERVICE_KDC}\",\"kpassword\":\"${KERBEROS_SERVICE_PASSWORD}\",\"krealm\":\"${KERBEROS_SERVICE_REALM}\",\"kuser\":\"${KERBEROS_SERVICE_USER}\"}"
-  EXISTS=$(check_service_exists kerberos-service)
-  if [ $EXISTS -eq 0 ]
-  then
-    echo "Creating kerberos-service $KERBEROS_SERVICE"
-    RETURN=("$(cf cups kerberos-service -p ${KERBEROS_SERVICE})")
-  else
-    echo "Updating kerberos-service $KERBEROS_SERVICE"
-    RETURN=("$(cf uups kerberos-service -p ${KERBEROS_SERVICE})")
-  fi
-
-  check_return
-}
-
 function deploy_backend {
     APP_NAME="${1}-backend"
     EXISTS=$(check_app_exists ${APP_NAME})
@@ -363,13 +348,14 @@ function create_space {
 }
 
 function deploy_services {
-  install_service postgresql93 free postgres &&
+  install_service postgresql93 free mypostgres &&
   install_service zookeeper shared &&
-  install_service redis28 free redis &&
+  install_service redis28 free myredis &&
   install_service hdfs bare &&
   install_service kafka shared &&
   install_service hbase bare &&
-  install_service smtp shared
+  install_service smtp shared &&
+  install_service kerberos shared kerberos-service &&
   if [ "x${DEPLOY_RULE_ENGINE}" = "x1" ]
   then
     install_service gearpump "1 worker"
@@ -383,7 +369,6 @@ function deploy_services {
   provide_rule_engine_credentials &&
   provide_gateway_credentials &&
   provide_dashboard_security_credentials &&
-  provide_kerberos_credentials &&
   echo "All services created or updated successfully!"
 }
 
