@@ -26,7 +26,7 @@ function check_space_exists {
 }
 
 function check_service_exists {
-  EXISTS=$(echo "$SERVICES_RES" | grep ${1} | wc -l)
+  EXISTS=$(echo "$SERVICES_RES" | grep -w ${1} | wc -l)
   echo $EXISTS
 }
 

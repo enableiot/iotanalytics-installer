@@ -103,21 +103,6 @@ do
             fi
             shift
         ;;
-        -kerberos-properties)
-            CUSTOM_KERBEROS_PROP=1
-
-            if [ -z "$2" ] || [ -z "$3" ] || [ -z "$4" ] || [ -z "$5" ];
-            then
-                echo "Please provide kerberos kdc, kerberos username, kerberos user's password, kerberos realm after -kerberos-properties"
-                exit 0
-            else
-                KERBEROS_SERVICE_KDC=$2
-                KERBEROS_SERVICE_PASSWORD=$3
-                KERBEROS_SERVICE_USER=$4
-                KERBEROS_SERVICE_REALM=$5
-            fi
-            shift 4
-        ;;
         *)
             echo "Run script with -d or --default option to run non-interactively and set all to defaults"
             exit 0
@@ -197,20 +182,6 @@ do
   write_section "RULE ENGINE CREDENTIALS"
   setup_field "RULE_ENGINE_SERVICE_USERNAME" "rule_engine@example.com" 
   setup_field "RULE_ENGINE_SERVICE_PASSWORD" $(random_password)
-
-  write_section "KERBEROS CREDENTIALS"
-  if [ ! "$CUSTOM_KERBEROS_PROP" ]
-  then
-    setup_field "KERBEROS_SERVICE_KDC" "example.kdc.com"
-    setup_field "KERBEROS_SERVICE_PASSWORD" $(random_password)
-    setup_field "KERBEROS_SERVICE_REALM" "example_realm"
-    setup_field "KERBEROS_SERVICE_USER" "example_user"
-  else
-    setup_field "KERBEROS_SERVICE_KDC" ${KERBEROS_SERVICE_KDC}
-    setup_field "KERBEROS_SERVICE_PASSWORD" ${KERBEROS_SERVICE_PASSWORD}
-    setup_field "KERBEROS_SERVICE_REALM" ${KERBEROS_SERVICE_REALM}
-    setup_field "KERBEROS_SERVICE_USER" ${KERBEROS_SERVICE_USER}
-  fi
 
   
   write_section "GOOGLE CAPTCHA CONFIGURATION"

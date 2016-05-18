@@ -43,26 +43,10 @@ function create_org {
   check_return
 }
 
-function get_property_from_vcap {
-    PROPERTY_NAME=$1
-    cf e gearpump-broker | grep -Po '"'"$PROPERTY_NAME"'"\s*:\s*"\K([^"]*)' | head -n 1
-}
-
 cf api ${CF_API} --skip-ssl-validation &&
 cf auth ${CF_TEST_USER} ${CF_TEST_USER_PASS} &&
 create_org ${CF_TEST_ORG} &&
 
 chmod +x ./configure.sh &&
 chmod +x ./installer.sh &&
-if [ ! "$KERBEROS_ENABLED" ]
-then
-    ./configure.sh -d ${GITHUB_SPACE} -cf-space ${CF_TEST_SPACE} --no-download --skip-ssl-validation
-else
-    cf t -o ${CF_ORG} -s ${CF_SPACE} &&
-    KDC=$(get_property_from_vcap kdc) &&
-    KPASSWORD=$(get_property_from_vcap kpassword) &&
-    KUSER=$(get_property_from_vcap kuser) &&
-    KREALM=$(get_property_from_vcap krealm) &&
-    cf t -o ${CF_TEST_ORG} &&
-    ./configure.sh -d ${GITHUB_SPACE} -cf-space ${CF_TEST_SPACE} -kerberos-properties $KDC $KPASSWORD $KUSER $KREALM --no-download --skip-ssl-validation
-fi
+./configure.sh -d ${GITHUB_SPACE} -cf-space ${CF_TEST_SPACE} --no-download --skip-ssl-validation
